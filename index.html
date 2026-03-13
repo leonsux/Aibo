@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>游戏搭子 🎮</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset & Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sun: #FFD93D;
+  --coral: #FF6B6B;
+  --mint: #6BCB77;
+  --sky: #4ECDC4;
+  --ink: #1a1a2e;
+  --ink2: #16213e;
+  --paper: #f8f5f0;
+  --card: #ffffff;
+  --muted: #8892a4;
+  --border: #e8e2da;
+  --radius: 18px;
+  --shadow: 0 4px 24px rgba(26,26,46,0.10);
+  --shadow-lg: 0 12px 48px rgba(26,26,46,0.16);
+}
+
+html { font-size: 15px; }
+
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Warm paper texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(255,217,61,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 60% at 90% 100%, rgba(78,205,196,0.10) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─── Layout ───────────────────────────────────────────── */
+.app {
+  position: relative; z-index: 1;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+/* ─── Header ───────────────────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-emoji {
+  font-size: 44px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(255,107,107,0.3));
+  animation: floatBob 3s ease-in-out infinite;
+}
+
+@keyframes floatBob {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.logo-words h1 {
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+
+.logo-words h1 span { color: var(--coral); }
+
+.logo-words p {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 1px;
+}
+
+/* Status chip */
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--card);
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: all 0.4s;
+  white-space: nowrap;
+}
+
+.status-chip.live {
+  border-color: var(--mint);
+  background: rgba(107,203,119,0.08);
+  color: #2e8b57;
+}
+
+.status-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.status-chip.live .status-dot {
+  background: var(--mint);
+  box-shadow: 0 0 0 3px rgba(107,203,119,0.25);
+  animation: livePulse 1.8s ease infinite;
+}
+
+@keyframes livePulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(107,203,119,0.25); }
+  50% { box-shadow: 0 0 0 6px rgba(107,203,119,0.08); }
+}
+
+/* ─── Grid ──────────────────────────────────────────────── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ─── Card ──────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.card-head {
+  padding: 16px 20px;
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── Screen preview ────────────────────────────────────── */
+.preview-wrap {
+  padding: 18px;
+}
+
+.screen-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/9;
+  background: var(--ink2);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--ink);
+  box-shadow: 0 8px 32px rgba(26,26,46,0.25);
+}
+
+/* Monitor stand decoration */
+.screen-box::after {
+  content: '';
+  position: absolute;
+  bottom: -12px; left: 50%;
+  transform: translateX(-50%);
+  width: 40%; height: 12px;
+  background: var(--ink);
+  clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+  border-radius: 0 0 4px 4px;
+}
+
+#screenImg {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.6s;
+}
+
+#screenImg.loaded { display: block; opacity: 1; }
+
+.preview-placeholder {
+  text-align: center;
+  color: rgba(255,255,255,0.3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  user-select: none;
+}
+
+.preview-placeholder .big { font-size: 48px; margin-bottom: 10px; }
+
+/* Scan overlay */
+.scan-overlay {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.scan-overlay.active { opacity: 1; }
+
+.scan-line {
+  position: absolute;
+  left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--sky), transparent);
+  animation: scanMove 2s linear infinite;
+}
+
+@keyframes scanMove {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+/* Scene tag under preview */
+.scene-bar {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+}
+
+.game-tag {
+  padding: 5px 12px;
+  background: var(--ink);
+  color: var(--sun);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.scene-text {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+  flex: 1;
+}
+
+/* ─── Controls ──────────────────────────────────────────── */
+.controls {
+  padding: 0 18px 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.btn {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: 'Noto Sans SC', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.18);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.btn:hover::after { opacity: 1; }
+.btn:active { transform: scale(0.97); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:disabled:active { transform: none; }
+
+.btn-start {
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+  color: white;
+  box-shadow: 0 4px 16px rgba(255,107,107,0.35);
+  grid-column: span 2;
+  padding: 15px;
+  font-size: 15px;
+}
+
+.btn-start.stop {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.btn-now {
+  background: linear-gradient(135deg, var(--sky), #3ab5ad);
+  color: white;
+  box-shadow: 0 4px 12px rgba(78,205,196,0.3);
+}
+
+.btn-clear {
+  background: var(--paper);
+  color: var(--muted);
+  border: 1.5px solid var(--border);
+}
+
+/* ─── Settings ──────────────────────────────────────────── */
+.settings-body {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 6px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.field input[type="password"],
+.field input[type="number"],
+.field select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+  font-family: 'JetBrains Mono', monospace;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--coral);
+  box-shadow: 0 0 0 3px rgba(255,107,107,0.12);
+}
+
+/* Style chips */
+.style-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.style-chip {
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+
+.style-chip:hover { border-color: var(--coral); color: var(--ink); }
+
+.style-chip.active {
+  background: var(--coral);
+  border-color: var(--coral);
+  color: white;
+  box-shadow: 0 3px 10px rgba(255,107,107,0.3);
+}
+
+/* ─── Buddy panel ───────────────────────────────────────── */
+.buddy-card {
+  text-align: center;
+  padding: 24px 20px 20px;
+}
+
+.avatar-ring {
+  width: 88px; height: 88px;
+  margin: 0 auto 14px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sun), var(--coral));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 46px;
+  box-shadow: 0 8px 28px rgba(255,217,61,0.35);
+  transition: all 0.3s;
+}
+
+.avatar-ring.cheer {
+  animation: cheerBounce 0.4s ease infinite alternate;
+  box-shadow: 0 8px 32px rgba(255,107,107,0.5);
+}
+
+@keyframes cheerBounce {
+  from { transform: scale(1) rotate(-3deg); }
+  to { transform: scale(1.08) rotate(3deg); }
+}
+
+.buddy-name {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+
+.buddy-mood {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Stats row */
+.stats-row {
+  display: flex;
+  margin-top: 18px;
+  border-top: 1.5px solid var(--border);
+  padding-top: 16px;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+}
+
+.stat + .stat { border-left: 1.5px solid var(--border); }
+
+.stat-n {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--coral);
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+}
+
+.stat-l {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* ─── Comments feed ─────────────────────────────────────── */
+.feed-body {
+  padding: 14px;
+  max-height: 480px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feed-body::-webkit-scrollbar { width: 4px; }
+.feed-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.feed-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 2;
+}
+
+.feed-empty .e-icon { font-size: 38px; display: block; margin-bottom: 8px; }
+
+/* Bubble */
+.bubble {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  animation: bubblePop 0.45s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes bubblePop {
+  from { opacity: 0; transform: translateY(12px) scale(0.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.bubble-avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sun), var(--coral));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  box-shadow: 0 3px 10px rgba(255,217,61,0.25);
+}
+
+.bubble-body {
+  flex: 1;
+  background: linear-gradient(135deg, #fff9f0, #fff5e8);
+  border: 1.5px solid #ffe9cc;
+  border-radius: 4px 14px 14px 14px;
+  padding: 10px 13px;
+}
+
+.bubble-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.bubble-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 6px;
+}
+
+.bubble-tag {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 100px;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.tag-cheer   { background: rgba(107,203,119,0.15); color: #2e8b57; }
+.tag-tease   { background: rgba(255,107,107,0.12); color: #c0392b; }
+.tag-analyse { background: rgba(78,205,196,0.15); color: #0e7490; }
+.tag-exclaim { background: rgba(255,217,61,0.2); color: #b45309; }
+
+.bubble-time {
+  font-size: 10px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ─── Error toast ───────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: 24px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  padding: 12px 22px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 100px;
+  font-size: 13px;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  z-index: 999;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.err { background: var(--coral); }
+
+/* ─── Spinner ───────────────────────────────────────────── */
+.spin {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin360 0.7s linear infinite;
+  display: none;
+}
+
+@keyframes spin360 { to { transform: rotate(360deg); } }
+
+/* ─── Responsive ────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div class="logo-emoji">🎮</div>
+      <div class="logo-words">
+        <h1>游戏<span>搭子</span></h1>
+        <p>AI GAMING BUDDY · CLAUDE VISION</p>
+      </div>
+    </div>
+    <div class="status-chip" id="statusChip">
+      <div class="status-dot"></div>
+      <span id="statusText">待机中</span>
+    </div>
+  </header>
+
+  <div class="grid">
+
+    <!-- ─── Left column ───────────────────────────────── -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Screen preview card -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">🖥️ 桌面监控</span>
+          <span id="countdownText" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);">—</span>
+        </div>
+        <div class="preview-wrap">
+          <div class="screen-box" id="screenBox">
+            <img id="screenImg" alt="截图预览">
+            <div class="preview-placeholder" id="previewPlaceholder">
+              <div class="big">🖥️</div>
+              <div>启动后自动截图</div>
+            </div>
+            <div class="scan-overlay" id="scanOverlay">
+              <div class="scan-line"></div>
+            </div>
+          </div>
+          <div class="scene-bar">
+            <div class="game-tag" id="gameTag">未检测</div>
+            <div class="scene-text" id="sceneText">启动监控后，搭子会实时观察你的屏幕</div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="btn btn-start" id="btnStart" onclick="toggleMonitor()">
+            <div class="spin" id="startSpin"></div>
+            <span id="startLabel">🚀 开始监控</span>
+          </button>
+          <button class="btn btn-now" id="btnNow" onclick="analyzeNow()" disabled>
+            <span>⚡ 立即分析</span>
+          </button>
+          <button class="btn btn-clear" onclick="clearFeed()">🗑️ 清空评论</button>
+        </div>
+      </div>
+
+      <!-- Settings card -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">⚙️ 设置</span>
+        </div>
+        <div class="settings-body">
+          <div class="field">
+            <label>Anthropic API Key</label>
+            <input type="password" id="apiKey" placeholder="sk-ant-api03-...">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+            <div class="field">
+              <label>截图间隔（秒）</label>
+              <input type="number" id="interval" value="30" min="10" max="300">
+            </div>
+            <div class="field" style="display:flex;flex-direction:column;">
+              <label>当前风格</label>
+              <div id="currentStyle" style="padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--ink);background:var(--paper);">热情鼓励 💪</div>
+            </div>
+          </div>
+          <div class="field">
+            <label>搭子风格</label>
+            <div class="style-chips">
+              <button class="style-chip active" onclick="setStyle(this,'热情鼓励','💪')">💪 热情鼓励</button>
+              <button class="style-chip" onclick="setStyle(this,'损友调侃','😈')">😈 损友调侃</button>
+              <button class="style-chip" onclick="setStyle(this,'专业解说','🎙️')">🎙️ 专业解说</button>
+              <button class="style-chip" onclick="setStyle(this,'毒舌评论','🔥')">🔥 毒舌评论</button>
+              <button class="style-chip" onclick="setStyle(this,'甜蜜女友','🍬')">🍬 甜蜜女友</button>
+            </div>
+          </div>
+          <div class="field" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+              <label style="margin-bottom:0;">语音朗读</label>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px;">搭子评论自动播报</div>
+            </div>
+            <button id="ttsToggle" onclick="toggleTts()" style="
+              padding:8px 18px;border-radius:100px;border:1.5px solid var(--mint);
+              background:rgba(107,203,119,0.12);color:#2e8b57;font-size:13px;font-weight:700;
+              cursor:pointer;transition:all 0.2s;font-family:'Noto Sans SC',sans-serif;
+              white-space:nowrap;flex-shrink:0;">🔊 已开启</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Right column ──────────────────────────────── -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Buddy card -->
+      <div class="card">
+        <div class="buddy-card">
+          <div class="avatar-ring" id="buddyAvatar">🤩</div>
+          <div class="buddy-name">小暖</div>
+          <div class="buddy-mood" id="buddyMood">等你开黑！</div>
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-n" id="statComments">0</div>
+              <div class="stat-l">评论</div>
+            </div>
+            <div class="stat">
+              <div class="stat-n" id="statGames">0</div>
+              <div class="stat-l">游戏</div>
+            </div>
+            <div class="stat">
+              <div class="stat-n" id="statTime">00:00</div>
+              <div class="stat-l">时长</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comments feed -->
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">💬 搭子说</span>
+          <span id="liveTag" style="font-size:11px;color:var(--mint);font-family:'JetBrains Mono',monospace;display:none;">● LIVE</span>
+        </div>
+        <div class="feed-body" id="feedBody">
+          <div class="feed-empty">
+            <span class="e-icon">🥤</span>
+            搭子正在喝奶茶等你<br>
+            <span style="font-size:12px;opacity:0.7;">启动监控后，实时评论会出现在这里</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── State ─────────────────────────────────────────────────
+let isRunning = false;
+let pollTimer = null;
+let countdownTimer = null;
+let sessionTimer = null;
+let sessionStart = null;
+let currentStyle = '热情鼓励';
+let ttsEnabled = true;
+let commentCount = 0;
+let gamesSet = new Set();
+let lastCommentTime = 0;
+
+// ─── Style ─────────────────────────────────────────────────
+function setStyle(btn, style, icon) {
+  currentStyle = style;
+  document.querySelectorAll('.style-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('currentStyle').textContent = `${style} ${icon}`;
+  saveSettings();
+  if (isRunning) sendSettings();
+}
+
+// ─── TTS toggle ─────────────────────────────────────────────
+async function toggleTts() {
+  ttsEnabled = !ttsEnabled;
+  const btn = document.getElementById('ttsToggle');
+  if (ttsEnabled) {
+    btn.textContent = '🔊 已开启';
+    btn.style.borderColor = 'var(--mint)';
+    btn.style.background = 'rgba(107,203,119,0.12)';
+    btn.style.color = '#2e8b57';
+  } else {
+    btn.textContent = '🔇 已关闭';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--muted)';
+  }
+  await api('/api/settings', { tts_enabled: ttsEnabled });
+  saveSettings();
+}
+
+// ─── Toggle monitor ─────────────────────────────────────────
+async function toggleMonitor() {
+  if (isRunning) {
+    await stop();
+  } else {
+    await start();
+  }
+}
+
+async function start() {
+  const apiKey = document.getElementById('apiKey').value.trim();
+  const interval = document.getElementById('interval').value;
+  if (!apiKey) { toast('请先填写 API Key ！', true); return; }
+
+  setStartLoading(true);
+  try {
+    const res = await api('/api/start', { api_key: apiKey, interval: +interval, style: currentStyle });
+    if (!res.ok) { toast(res.error || '启动失败', true); return; }
+
+    isRunning = true;
+    setUiRunning(true);
+    sessionStart = Date.now();
+    startSessionTimer();
+    startPolling();
+    toast('搭子已就位，开始观察你的屏幕！');
+  } catch(e) {
+    toast('无法连接服务器：' + e.message, true);
+  } finally {
+    setStartLoading(false);
+  }
+}
+
+async function stop() {
+  await api('/api/stop', {});   // 明确用 POST
+  isRunning = false;
+  setUiRunning(false);
+  clearInterval(pollTimer);
+  clearInterval(countdownTimer);
+  clearInterval(sessionTimer);
+  document.getElementById('countdownText').textContent = '—';
+  toast('搭子先去休息了 💤');
+}
+
+function setUiRunning(on) {
+  const btn = document.getElementById('btnStart');
+  btn.classList.toggle('stop', on);
+  document.getElementById('startLabel').textContent = on ? '⏹️ 停止监控' : '🚀 开始监控';
+  document.getElementById('btnNow').disabled = !on;
+  document.getElementById('statusChip').classList.toggle('live', on);
+  document.getElementById('liveTag').style.display = on ? '' : 'none';
+  document.getElementById('buddyAvatar').classList.toggle('cheer', on);
+}
+
+function setStartLoading(on) {
+  document.getElementById('startSpin').style.display = on ? 'block' : 'none';
+  document.getElementById('startLabel').style.display = on ? 'none' : '';
+  document.getElementById('btnStart').disabled = on;
+}
+
+// ─── Analyze now ────────────────────────────────────────────
+async function analyzeNow() {
+  const btn = document.querySelector('.btn-now');
+  btn.disabled = true;
+  btn.querySelector('span').textContent = '分析中...';
+  activateScan(true);
+  try {
+    const res = await api('/api/analyze_now', {});
+    if (!res.ok) toast(res.error || '分析失败', true);
+  } catch(e) { toast(e.message, true); }
+  finally {
+    btn.disabled = false;
+    btn.querySelector('span').textContent = '⚡ 立即分析';
+    activateScan(false);
+  }
+}
+
+// ─── Polling ─────────────────────────────────────────────────
+let prevCommentCount = 0;
+let nextAnalysisAt = null;
+
+function startPolling() {
+  poll();
+  pollTimer = setInterval(poll, 2500);
+}
+
+async function poll() {
+  try {
+    const s = await api('/api/state', null, 'GET');
+
+    // Status text
+    document.getElementById('statusText').textContent = s.status || '监控中';
+    document.getElementById('buddyMood').textContent = s.running
+      ? (s.current_game ? `正在看：${s.current_game}` : '眼观六路中...')
+      : '待机中';
+
+    // Screenshot
+    if (s.last_screenshot_b64) {
+      const img = document.getElementById('screenImg');
+      img.src = 'data:image/jpeg;base64,' + s.last_screenshot_b64;
+      img.classList.add('loaded');
+      document.getElementById('previewPlaceholder').style.display = 'none';
+    }
+
+    // Game / scene
+    if (s.current_game) {
+      document.getElementById('gameTag').textContent = s.current_game;
+      document.getElementById('sceneText').textContent = s.current_scene || '';
+    }
+
+    // New comments
+    const incoming = s.comments || [];
+    const newOnes = incoming.filter(c => {
+      const key = c.time + c.text;
+      return !seenKeys.has(key);
+    });
+    newOnes.reverse().forEach(c => addBubble(c));
+
+    // Stats
+    document.getElementById('statComments').textContent = s.stats?.total_comments ?? 0;
+    const games = s.stats?.games_seen ?? [];
+    document.getElementById('statGames').textContent = games.length;
+
+    // Error
+    if (s.error) toast('⚠️ ' + s.error, true);
+
+    // Countdown
+    updateCountdown(s);
+
+  } catch(e) { /* silently retry */ }
+}
+
+// ─── Seen comments tracker ─────────────────────────────────
+const seenKeys = new Set();
+
+function addBubble(comment) {
+  const key = comment.time + comment.text;
+  if (seenKeys.has(key)) return;
+  seenKeys.add(key);
+
+  const feed = document.getElementById('feedBody');
+  // Remove empty state
+  const empty = feed.querySelector('.feed-empty');
+  if (empty) empty.remove();
+
+  const typeMap = {
+    '鼓励': ['tag-cheer','💪 鼓励'],
+    '调侃': ['tag-tease','😄 调侃'],
+    '分析': ['tag-analyse','🔍 分析'],
+    '感叹': ['tag-exclaim','✨ 感叹'],
+  };
+  const [cls, label] = typeMap[comment.type] || ['tag-cheer','💬'];
+
+  const el = document.createElement('div');
+  el.className = 'bubble';
+  el.innerHTML = `
+    <div class="bubble-avatar">🤩</div>
+    <div class="bubble-body">
+      <div class="bubble-text">${comment.text}</div>
+      <div class="bubble-footer">
+        <span class="bubble-tag ${cls}">${label}</span>
+        <span class="bubble-time">${comment.time}</span>
+      </div>
+    </div>
+  `;
+  feed.insertBefore(el, feed.firstChild);
+
+  // Bounce avatar
+  const avatar = document.getElementById('buddyAvatar');
+  avatar.classList.remove('cheer');
+  void avatar.offsetWidth;
+  avatar.classList.add('cheer');
+
+  commentCount++;
+}
+
+// ─── Countdown ──────────────────────────────────────────────
+let lastStatusTime = null;
+
+function updateCountdown(s) {
+  if (!s.running) return;
+  // rough: derive from interval setting shown in input
+  const interval = parseInt(document.getElementById('interval').value) || 30;
+  if (!nextAnalysisAt || (s.status && s.status !== lastStatusTime)) {
+    // reset if just analyzed
+    if (s.status && s.status.includes('已更新')) {
+      nextAnalysisAt = Date.now() + interval * 1000;
+    }
+    lastStatusTime = s.status;
+  }
+  if (nextAnalysisAt) {
+    const remain = Math.max(0, Math.ceil((nextAnalysisAt - Date.now()) / 1000));
+    document.getElementById('countdownText').textContent = remain > 0 ? `下次分析 ${remain}s` : '分析中...';
+    if (remain === 0) nextAnalysisAt = Date.now() + interval * 1000;
+  }
+}
+
+// ─── Session timer ──────────────────────────────────────────
+function startSessionTimer() {
+  sessionTimer = setInterval(() => {
+    const sec = Math.floor((Date.now() - sessionStart) / 1000);
+    const m = String(Math.floor(sec/60)).padStart(2,'0');
+    const s = String(sec%60).padStart(2,'0');
+    document.getElementById('statTime').textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+// ─── Scan animation ─────────────────────────────────────────
+function activateScan(on) {
+  document.getElementById('scanOverlay').classList.toggle('active', on);
+}
+
+// ─── Clear ──────────────────────────────────────────────────
+async function clearFeed() {
+  await api('/api/clear');
+  seenKeys.clear();
+  document.getElementById('feedBody').innerHTML = `
+    <div class="feed-empty">
+      <span class="e-icon">🥤</span>
+      搭子正在喝奶茶等你<br>
+      <span style="font-size:12px;opacity:0.7;">启动监控后，实时评论会出现在这里</span>
+    </div>`;
+  document.getElementById('statComments').textContent = '0';
+}
+
+// ─── Settings push ───────────────────────────────────────────
+async function sendSettings() {
+  await api('/api/settings', {
+    style:     currentStyle,
+    interval:  +document.getElementById('interval').value,
+  });
+}
+
+// ─── 本地存储：保存所有设置 ──────────────────────────────────
+function saveSettings() {
+  localStorage.setItem('buddy_settings', JSON.stringify({
+    apiKey:   document.getElementById('apiKey').value,
+    interval: document.getElementById('interval').value,
+    style:    currentStyle,
+    tts:      ttsEnabled,
+  }));
+}
+
+// ─── 本地存储：页面加载时恢复设置 ───────────────────────────
+function loadSettings() {
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem('buddy_settings')); } catch {}
+  if (!saved) return;
+
+  // API Key
+  if (saved.apiKey) document.getElementById('apiKey').value = saved.apiKey;
+
+  // 截图间隔
+  if (saved.interval) document.getElementById('interval').value = saved.interval;
+
+  // 搭子风格：找到对应的 chip 并激活
+  if (saved.style) {
+    const iconMap = { '热情鼓励':'💪', '损友调侃':'😈', '专业解说':'🎙️', '毒舌评论':'🔥', '甜蜜女友':'🍬' };
+    document.querySelectorAll('.style-chip').forEach(btn => {
+      const label = btn.textContent.replace(/^.\s/, ''); // 去掉 emoji 前缀
+      if (btn.textContent.includes(saved.style)) {
+        btn.classList.add('active');
+        currentStyle = saved.style;
+        document.getElementById('currentStyle').textContent =
+          `${saved.style} ${iconMap[saved.style] || ''}`;
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+  }
+
+  // TTS 开关
+  if (saved.tts === false) {
+    ttsEnabled = false;
+    const btn = document.getElementById('ttsToggle');
+    btn.textContent = '🔇 已关闭';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--muted)';
+  }
+
+}
+
+// ─── API helper ─────────────────────────────────────────────
+async function api(path, body=null, method=null) {
+  const m = method || (body !== null ? 'POST' : 'GET');
+  const opts = { method: m, headers: { 'Content-Type': 'application/json' } };
+  if (body !== null) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  const text = await r.text();
+  return text ? JSON.parse(text) : {};
+}
+
+// ─── Toast ──────────────────────────────────────────────────
+let toastTimer;
+function toast(msg, err=false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('err', err);
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// ─── Interval input → live update ───────────────────────────
+document.getElementById('interval').addEventListener('change', () => {
+  saveSettings();
+  if (isRunning) sendSettings();
+});
+
+// API Key 输入时也保存
+document.getElementById('apiKey').addEventListener('input', saveSettings);
+
+// ─── 页面加载时恢复设置 + 后端状态 ─────────────────────────────
+loadSettings();
+
+async function restoreState() {
+  try {
+    const s = await api('/api/state', null, 'GET');
+    if (!s.running) return;
+
+    // 后端仍在运行，恢复 UI
+    isRunning = true;
+    setUiRunning(true);
+    startPolling();
+
+    // 恢复计时器（用后端 session_start 计算已经过的时间）
+    if (s.stats && s.stats.session_start) {
+      sessionStart = new Date(s.stats.session_start).getTime();
+    } else {
+      sessionStart = Date.now();
+    }
+    startSessionTimer();
+
+    toast('搭子还在盯着你的屏幕呢 👀');
+  } catch(e) {
+    // 后端没开，静默忽略
+  }
+}
+restoreState();
+</script>
+</body>
+</html>
