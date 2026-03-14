@@ -52,9 +52,9 @@ def _tts_worker():
         item = _speak_queue.get()
         if item is None:
             break
-        text, api_key, voice, comment_type = item
+        text, api_key, voice, comment_type, volume = item
         try:
-            _do_speak_dashscope(text, api_key, voice, comment_type)
+            _do_speak_dashscope(text, api_key, voice, comment_type, volume)
         except Exception as e:
             print(f"[TTS] 合成失败，降级到系统 TTS: {e}")
             _do_speak_system(text)
@@ -68,7 +68,7 @@ def _build_instruction(comment_type: str) -> str:
     return f"你正在进行{scene}，你说话的情感是{emotion}。"
 
 
-def _do_speak_dashscope(text: str, api_key: str, voice: str = TTS_VOICE, comment_type: str = "鼓励"):
+def _do_speak_dashscope(text: str, api_key: str, voice: str = TTS_VOICE, comment_type: str = "鼓励", volume: int = 80):
     """用 dashscope SDK + Instruct 合成有情感的语音"""
     import ssl
     import dashscope
@@ -101,27 +101,27 @@ def _do_speak_dashscope(text: str, api_key: str, voice: str = TTS_VOICE, comment
         f.write(audio)
         tmp_path = f.name
     try:
-        _play_audio(tmp_path)
+        _play_audio(tmp_path, volume)
     finally:
         os.unlink(tmp_path)
 
 
-def _play_audio(path: str):
-    """静默播放 mp3，用户无感知"""
+def _play_audio(path: str, volume: int = 80):
+    """静默播放 mp3，用户无感知，支持音量控制"""
     import sys, subprocess
     platform = sys.platform
+    vol_f = volume / 100.0  # 0.0 ~ 1.0
     if platform == "darwin":
-        subprocess.run(["afplay", path], check=False)
+        # afplay -v 支持 0.0~1.0 音量
+        subprocess.run(["afplay", "-v", str(vol_f), path], check=False)
     elif platform == "win32":
-        # PowerShell MediaPlayer 静默播放，轮询 Position 直到播放完毕
         script = (
             "[void][System.Reflection.Assembly]::LoadWithPartialName('presentationCore');"
             "$mp = New-Object System.Windows.Media.MediaPlayer;"
             f"$mp.Open([uri](Convert-Path '{path}'));"
-            # 等待媒体加载完成（NaturalDuration 变为有效值）
             "Start-Sleep -Milliseconds 800;"
+            f"$mp.Volume = {vol_f:.2f};"
             "$mp.Play();"
-            # 再等一下让 NaturalDuration 稳定
             "Start-Sleep -Milliseconds 300;"
             "$total = $mp.NaturalDuration.TimeSpan.TotalMilliseconds;"
             "if ($total -le 0) { $total = 15000 };"
@@ -135,7 +135,12 @@ def _play_audio(path: str):
     else:
         for player in ["mpg123", "ffplay", "aplay"]:
             if subprocess.run(["which", player], capture_output=True).returncode == 0:
-                args = [player, "-nodisp", "-autoexit", path] if player == "ffplay" else [player, path]
+                if player == "ffplay":
+                    args = [player, "-nodisp", "-autoexit", "-volume", str(volume), path]
+                elif player == "mpg123":
+                    args = [player, "-f", str(int(vol_f * 32768)), path]
+                else:
+                    args = [player, path]
                 subprocess.run(args, check=False, capture_output=True)
                 break
 
@@ -168,8 +173,9 @@ def speak(text: str, comment_type: str = "鼓励"):
         enabled = state.get("tts_enabled", True)
         api_key = state.get("api_key", "")
         voice   = state.get("tts_voice", TTS_VOICE)
+        volume  = state.get("tts_volume", 80)
     if enabled:
-        _speak_queue.put((text, api_key, voice, comment_type))
+        _speak_queue.put((text, api_key, voice, comment_type, volume))
 # ──────────────────────────────────────────────────────────
 
 # ─── 全局状态（线程间共享）─────────────────────────────────
@@ -180,6 +186,7 @@ state = {
     "style": "热情鼓励",
     "tts_enabled": True,
     "tts_voice": TTS_VOICE,            # 音色，可在界面切换
+    "tts_volume": 80,                  # 音量 0-100
     "comments": [],
     "current_game": None,
     "current_scene": None,
@@ -460,6 +467,8 @@ class Handler(BaseHTTPRequestHandler):
                 state["tts_enabled"] = bool(body["tts_enabled"])
             if "tts_voice" in body:
                 state["tts_voice"] = body["tts_voice"]
+            if "tts_volume" in body:
+                state["tts_volume"] = int(body["tts_volume"])
         self.serve_json({"ok": True})
 
     def get_safe_state(self):
