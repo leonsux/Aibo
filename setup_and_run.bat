@@ -29,10 +29,10 @@ IF NOT EXIST "venv\" (
     echo  [OK] Virtual environment already exists, skipping.
 )
 
-REM 3. Install dependencies
+REM 3. Install dependencies (use python -m pip to avoid permission issues)
 echo  [2/3] Installing dependencies...
-venv\Scripts\pip install --quiet --upgrade pip
-venv\Scripts\pip install --quiet openai Pillow dashscope certifi
+venv\Scripts\python.exe -m pip install --quiet --upgrade pip
+venv\Scripts\python.exe -m pip install --quiet openai Pillow dashscope certifi
 echo  [OK] Dependencies installed.
 
 REM 4. Launch
@@ -40,6 +40,6 @@ echo  [3/3] Starting Gaming Buddy...
 echo  ------------------------------------------------
 echo  Open your browser and visit: http://localhost:7788
 echo.
-venv\Scripts\python buddy.py
+venv\Scripts\python.exe buddy.py
 
 pause
