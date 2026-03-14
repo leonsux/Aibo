@@ -107,14 +107,28 @@ def _do_speak_dashscope(text: str, api_key: str, voice: str = TTS_VOICE, comment
 
 
 def _play_audio(path: str):
-    """用系统自带播放器播放音频文件"""
+    """静默播放 mp3，用户无感知"""
     import sys, subprocess
     platform = sys.platform
     if platform == "darwin":
         subprocess.run(["afplay", path], check=False)
     elif platform == "win32":
-        # 用默认程序打开并等待（wmplayer 或系统关联程序）
-        subprocess.run(["cmd", "/c", "start", "/wait", "", path], check=False)
+        # PowerShell MediaPlayer 静默播放，无任何界面弹出
+        # 先获取音频时长再等待，避免提前退出或等太久
+        script = (
+            "[void][System.Reflection.Assembly]::LoadWithPartialName('presentationCore');"
+            "$mp = New-Object System.Windows.Media.MediaPlayer;"
+            f"$mp.Open([uri](Convert-Path '{path}'));"
+            "$mp.Play();"
+            "Start-Sleep -Milliseconds 500;"          # 等待加载
+            "$dur = $mp.NaturalDuration.TimeSpan.TotalSeconds;"
+            "if ($dur -gt 0) {{ Start-Sleep -Seconds $dur }} else {{ Start-Sleep -Seconds 15 }};"
+            "$mp.Stop(); $mp.Close();"
+        )
+        subprocess.run(
+            ["powershell", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", script],
+            check=False, capture_output=True
+        )
     else:
         for player in ["mpg123", "ffplay", "aplay"]:
             if subprocess.run(["which", player], capture_output=True).returncode == 0:
