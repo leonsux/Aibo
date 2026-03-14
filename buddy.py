@@ -113,16 +113,19 @@ def _play_audio(path: str):
     if platform == "darwin":
         subprocess.run(["afplay", path], check=False)
     elif platform == "win32":
-        # PowerShell MediaPlayer 静默播放，无任何界面弹出
-        # 先获取音频时长再等待，避免提前退出或等太久
+        # PowerShell MediaPlayer 静默播放，轮询 Position 直到播放完毕
         script = (
             "[void][System.Reflection.Assembly]::LoadWithPartialName('presentationCore');"
             "$mp = New-Object System.Windows.Media.MediaPlayer;"
             f"$mp.Open([uri](Convert-Path '{path}'));"
+            # 等待媒体加载完成（NaturalDuration 变为有效值）
+            "Start-Sleep -Milliseconds 800;"
             "$mp.Play();"
-            "Start-Sleep -Milliseconds 500;"          # 等待加载
-            "$dur = $mp.NaturalDuration.TimeSpan.TotalSeconds;"
-            "if ($dur -gt 0) {{ Start-Sleep -Seconds $dur }} else {{ Start-Sleep -Seconds 15 }};"
+            # 再等一下让 NaturalDuration 稳定
+            "Start-Sleep -Milliseconds 300;"
+            "$total = $mp.NaturalDuration.TimeSpan.TotalMilliseconds;"
+            "if ($total -le 0) { $total = 15000 };"
+            "Start-Sleep -Milliseconds $total;"
             "$mp.Stop(); $mp.Close();"
         )
         subprocess.run(
