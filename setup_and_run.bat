@@ -1,42 +1,44 @@
 @echo off
+chcp 65001 >nul
 REM ============================================================
-REM  游戏搭子 AI — Windows 一键启动
-REM  双击此文件即可运行
+REM  Gaming Buddy AI - Windows One-Click Setup & Launch
+REM  Double-click to run, or execute in cmd: setup_and_run.bat
 REM ============================================================
 
 echo.
-echo  🎮  游戏搭子 AI — 环境初始化
-echo  ────────────────────────────────
+echo  [Gaming Buddy AI] Setting up environment...
+echo  ------------------------------------------------
 
-REM 1. 检查 Python
+REM 1. Check Python
 python --version >nul 2>&1
 IF ERRORLEVEL 1 (
-  echo  ❌ 未找到 Python，请先安装：https://www.python.org/downloads/
-  echo     安装时记得勾选 "Add Python to PATH"
-  pause
-  exit /b 1
+    echo  [ERROR] Python not found.
+    echo  Please install Python from: https://www.python.org/downloads/
+    echo  Make sure to check "Add Python to PATH" during installation.
+    pause
+    exit /b 1
 )
-echo  ✅ Python 已找到
+echo  [OK] Python found.
 
-REM 2. 创建虚拟环境
+REM 2. Create virtual environment
 IF NOT EXIST "venv\" (
-  echo  ▶ 创建虚拟环境...
-  python -m venv venv
-  echo  ✅ 虚拟环境创建完成
+    echo  [1/3] Creating virtual environment...
+    python -m venv venv
+    echo  [OK] Virtual environment created.
 ) ELSE (
-  echo  ⏭  虚拟环境已存在，跳过
+    echo  [OK] Virtual environment already exists, skipping.
 )
 
-REM 3. 安装依赖
-echo  ▶ 安装依赖...
+REM 3. Install dependencies
+echo  [2/3] Installing dependencies...
 venv\Scripts\pip install --quiet --upgrade pip
 venv\Scripts\pip install --quiet openai Pillow dashscope certifi
-echo  ✅ 依赖安装完成
+echo  [OK] Dependencies installed.
 
-REM 4. 启动
-echo  ▶ 启动游戏搭子...
-echo  ────────────────────────────────
-echo  ✅ 浏览器访问 http://localhost:7788 开始使用
+REM 4. Launch
+echo  [3/3] Starting Gaming Buddy...
+echo  ------------------------------------------------
+echo  Open your browser and visit: http://localhost:7788
 echo.
 venv\Scripts\python buddy.py
 
